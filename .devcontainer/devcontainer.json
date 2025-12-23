@@ -1,0 +1,63 @@
+{
+  "name": "jazzy desktop-full",
+  "dockerFile": "Dockerfile",
+  "runArgs": [
+    "--privileged",
+    "--network=host",
+    "--gpus=all",             // NVIDIA GPU 直通
+    "--runtime=nvidia",
+    "-e", "NVIDIA_DRIVER_CAPABILITIES=graphics,utility,compute",  // 仅启用必要的功能
+    "-e", "NVIDIA_VISIBLE_DEVICES=all",
+    
+    // 允许实时调度 & 内存锁定
+    "--cap-add=SYS_NICE",
+    "--ulimit", "rtprio=99",
+    "--ulimit", "memlock=-1"
+  ],
+  "containerEnv": {
+      // ubuntu proxy setting
+      "HTTP_PROXY":   "http://127.0.0.1:7897",
+      "HTTPS_PROXY":  "http://127.0.0.1:7897",
+      "NO_PROXY":     "localhost,127.0.0.1",
+      "no_proxy":    "localhost,127.0.0.1",
+
+      // window proxy setting
+      // "HTTP_PROXY":  "http://host.docker.internal:7897",
+      // "HTTPS_PROXY": "http://host.docker.internal:7897",
+
+      // ubuntu nvidia setting, nvidia gpu render have opengl bug in windows 
+      // "LIBGL_ALWAYS_INDIRECT": "1",  // 关键：强制使用间接渲染
+      // "__GLX_VENDOR_LIBRARY_NAME": "nvidia",  // 强制使用 NVIDIA GLX
+
+      // ubuntu X11 display
+      "DISPLAY": "${localEnv:DISPLAY}"
+
+      // windows display setting 
+      // "DISPLAY": "host.docker.internal:0.0", 
+
+      // mujoco runtime tmp
+      // "XDG_RUNTIME_DIR": "/tmp/runtime-ubuntu"
+  },
+  "workspaceMount": "source=${localWorkspaceFolder},target=/${localWorkspaceFolderBasename},type=bind",
+  "workspaceFolder": "/${localWorkspaceFolderBasename}",
+  "mounts": [
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.bash_history,target=/home/vscode/.bash_history,type=bind",
+    // SSH key
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/ubuntu/.ssh,type=bind,consistency=cached",
+    // ubuntu x11 display
+    "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind,consistency=cached",
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.Xauthority,target=/home/ubuntu/.Xauthority,type=bind,consistency=cached"
+  ],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.cpptools-extension-pack",
+        "Ranch-Hand-Robotics.rde-ros-2",
+        "Ranch-Hand-Robotics.urdf-editor",
+        "ms-azuretools.vscode-docker",
+        "twxs.cmake"
+      ]
+    }
+
+  }
+}
